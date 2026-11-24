@@ -5,6 +5,10 @@ import AbnormalityFile from '@/components/file/AbnormalityFile.vue'
 import AppHeader from '@/components/header/AppHeader.vue'
 import UnitGrid from '@/components/roster/UnitGrid.vue'
 import SettingsPanel from '@/components/settings/SettingsPanel.vue'
+import { useAuthorTools } from '@/composables/useAuthorTools'
+
+// Null for readers.
+const author = useAuthorTools()
 </script>
 
 <template>
@@ -21,6 +25,7 @@ import SettingsPanel from '@/components/settings/SettingsPanel.vue'
     <SettingsPanel />
     <AppFooter />
   </div>
+  <component :is="author.PublishBar" v-if="author" />
 </template>
 
 <style scoped lang="scss">

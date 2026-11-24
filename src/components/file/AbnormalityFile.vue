@@ -7,6 +7,7 @@ import FileHeader from './FileHeader.vue'
 import FileNotes from './FileNotes.vue'
 import PerformanceReview from './PerformanceReview.vue'
 import WorkResults from './WorkResults.vue'
+import { useAuthorTools } from '@/composables/useAuthorTools'
 import { useContainmentLog } from '@/composables/useContainmentLog'
 import { useLogBrowser } from '@/composables/useLogBrowser'
 import { useIsCompact } from '@/composables/useMediaQuery'
@@ -15,6 +16,8 @@ import { formatDay } from '@/domain/format'
 const log = useContainmentLog()
 const { selected, selectCount, close } = useLogBrowser()
 const isCompact = useIsCompact()
+// Null for readers. In author mode the file also holds the editor.
+const author = useAuthorTools()
 
 const entry = computed(() => (selected.value ? log.entry(selected.value.code) : undefined))
 const note = computed(() => (selected.value && entry.value ? log.note(selected.value.code) : undefined))
@@ -62,6 +65,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
       </div>
       <div class="file-body">
         <FileHeader ref="header" :abnormality="selected" :sealed="sealed" :logged="!!entry" />
+        <component :is="author.EntryEditor" v-if="author" :abnormality="selected" />
         <div v-if="!entry" class="sec">
           <p>{{ $t(sealed ? 'file.sealed' : 'file.unlogged') }}</p>
         </div>
@@ -92,6 +96,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
   display: block;
   position: fixed;
   inset: 0;
+  // --author-bar is the height of author mode's bar; readers never have one.
+  bottom: var(--author-bar, 0px);
   z-index: 10;
   overflow-y: auto;
   background: var(--ink);
@@ -129,7 +135,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
     top: 16px;
     inset: auto;
     z-index: auto;
-    max-height: calc(100vh - 32px);
+    max-height: calc(100vh - 32px - var(--author-bar, 0px));
     overflow-y: auto;
     border: 1px solid var(--line);
     background: var(--ink);

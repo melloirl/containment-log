@@ -19,32 +19,39 @@ Vite prints the local address. Edit anything under `src/` and the page updates a
 
 ## Add to the log
 
-The guide is read-only. Its content is code, and it changes by commit.
+Readers get a read-only guide. You write it in author mode, which exists only in the dev server on your machine.
 
-1. Add the abnormality to `src/content/entries.ts` under its classification code, with the day it was logged and whatever is rated so far.
-2. If it has a field note, add it under `notes` in `src/i18n/locales/en.ts`.
-3. Run `pnpm test`. It catches a mistyped code or a missing label.
-
-```ts
-// src/content/entries.ts
-'O-03-60': {
-  logged: '2026-11-24',
-  rating: { usefulness: 'neutral', danger: 'dangerous', management: 'periodic' },
-  fan: true,
-  works: { attachment: 'good', repression: 'bad' },
-  agentsLost: 2,
-},
+```sh
+pnpm author
 ```
 
-Every label and name on the page is in `src/i18n/locales/en.ts` too. To add a language, copy that file, translate it, and register it in `src/i18n/index.ts`.
+The guide opens with a dashed **Author** box in each abnormality's file and a bar along the bottom.
+
+1. Open a containment unit. If it is new, press **Log this abnormality**.
+2. Type the field note and click the ratings, work results and the rest. The reader's view below the box updates as you go, and your edits are written to the content files a moment after each change.
+3. Press **Publish**. It commits the content files with the message in the bar, which you can reword, and pushes with your own git login. The push starts the deploy, and the site updates in about a minute.
+
+To make plain `pnpm dev` an author session on one machine, put `VITE_AUTHOR=true` in `.env.local`, which git ignores. Without that variable there is no editor: a build never contains it.
+
+Publish only commits the two content files, so unrelated work in progress stays out of it:
+
+| File | Holds |
+| --- | --- |
+| `src/content/entries.json` | Each logged abnormality: the day, ratings, fan flag, work results, agents lost. |
+| `src/i18n/locales/en.notes.json` | The field notes, in English. |
+
+`pnpm test` checks both against the roster, and the deploy runs it first, so a broken file fails the deploy and leaves the live site as it was.
+
+Every label and name on the page is in `src/i18n/locales/en.ts`. To add a language, copy that file and its notes file, translate them, and register the locale in `src/i18n/index.ts`.
 
 ## Build and check
 
 | Command | What it does |
 | --- | --- |
+| `pnpm author` | Starts the dev server in author mode and opens the guide. |
 | `pnpm build` | Type-checks, then writes the static site to `dist/`. |
 | `pnpm preview` | Serves `dist/` locally. |
-| `pnpm test` | Runs the unit tests, including the checks on the hand-written content. |
+| `pnpm test` | Runs the unit tests, including the checks on the content files. |
 | `pnpm typecheck` | Type-checks without building. |
 
 The build uses relative URLs, so `dist/` works from any path on any static host.

@@ -14,17 +14,31 @@ export interface LogSummary {
   readonly fans: number
 }
 
+/** Where the entries and notes come from. */
+export interface LogSource {
+  readonly entries: Readonly<Record<string, Entry>>
+  /** The field note in the reader's language, if one was written. */
+  note(code: string): string | undefined
+}
+
+/** The content in the repository, as built into the page. */
+const PUBLISHED: LogSource = {
+  entries: ENTRIES,
+  note: (code) => authored('notes', code),
+}
+
 /**
  * The guide's content, ready to show: the roster with names in the reader's
  * language, the authored entries and notes, and the spoiler shield.
  *
- * Nothing is saved. The entries are code (src/content/entries.ts); the shield
- * is the one thing a reader can change, and it starts on at every visit.
+ * Nothing is saved. The content is files in the repository; the shield is the
+ * one thing a reader can change, and it starts on at every visit.
  *
  * One instance per page.
  */
 export interface ContainmentLog {
   readonly roster: ComputedRef<readonly Abnormality[]>
+  readonly entries: Readonly<Record<string, Entry>>
   readonly summary: ComputedRef<LogSummary>
   /** Hides the name, silhouette and risk of abnormalities that have no entry. */
   readonly shield: Ref<boolean>
@@ -35,7 +49,8 @@ export interface ContainmentLog {
   note(code: string): string | undefined
 }
 
-export function createContainmentLog(entries: Readonly<Record<string, Entry>> = ENTRIES): ContainmentLog {
+export function createContainmentLog(source: LogSource = PUBLISHED): ContainmentLog {
+  const { entries } = source
   const roster = computed<readonly Abnormality[]>(() =>
     CATALOG.map((row) => ({ ...row, name: authored('abnormalities', row.code) ?? row.code })),
   )
@@ -56,18 +71,26 @@ export function createContainmentLog(entries: Readonly<Record<string, Entry>> = 
 
   return {
     roster,
+    entries,
     summary,
     shield: ref(true),
     byCode: (code) => index.value.get(code),
     entry: (code) => entries[code],
-    note: (code) => authored('notes', code),
+    note: (code) => source.note(code),
   }
 }
 
+let source = PUBLISHED
 let instance: ContainmentLog | undefined
 
 /** The page-wide instance. Created on first use. */
 export function useContainmentLog(): ContainmentLog {
-  instance ??= createContainmentLog()
+  instance ??= createContainmentLog(source)
   return instance
+}
+
+/** Points the page-wide instance at another source. Author mode calls this before the app mounts. */
+export function readLogFrom(next: LogSource): void {
+  source = next
+  instance = undefined
 }

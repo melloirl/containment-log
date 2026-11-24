@@ -4,6 +4,10 @@
 //  - interface messages use vue-i18n syntax: {name} is a placeholder and
 //    "one | many" is a plural pair;
 //  - `abnormalities` and `notes` are read exactly as written, so any character is fine.
+//
+// The notes are in en.notes.json, which author mode writes (see README).
+import notes from './en.notes.json'
+
 export default {
   app: {
     title: 'Containment log',
@@ -231,47 +235,6 @@ export default {
     'T-03-46': 'WhiteNight',
   } as Record<string, string>,
 
-  /**
-   * Field notes by classification code, for logged abnormalities. Read as written.
-   * Use a template string (backticks) and leave a blank line between paragraphs.
-   */
-  notes: {
-    'O-03-03': `Pretty simple, first abnormality that teaches you the basics of what's to come.
-
-It's notably easy to handle, deals moderate to low damage even in early game and provides the first accessible white weapons to recover other employees from panic + a matching resist E.G.O suit. It also doesn't breach containment so don't worry about the Qliphoth Counter with this one.
-
-And it's also based of Jesus apparently.`,
-
-    'F-05-52': `Lore is crazy with this one. Bottom line, a pretty nice and straightforward training abnormality that recovers HP and SP depending on which type of activity you choose to conduct. Instinct recovers HP, Insight recovers SP, and both Attachment and Repression recover a bit of each. It also doesn't breach containment and has no Qliphoth Counter.
-
-There's one tiny factor that can potentially make it dangerous: if the experiment yields bad results, the employee involved will be sent on an involuntary fishing trip and be considered dead. No way to save them.
-
-That's still quite manageable considering how favorable Instinct and Insight work are. Attachment and Repression are somewhat riskier, though, so I'd recommend sticking to the former two unless you're specifically trying to train other stats.`,
-
-    'O-03-60': `This one's a bit tricky. You'll learn from the lore that the abnormality itself means no harm, but it's still an eldritch being from outer space capable of frying a human's brain.
-
-It has this mechanic where mediocre or bad results have a 50% and 70% chance, respectively, of decreasing its Qliphoth Counter. Employees panicking during work will also lower it. You can minimize the chances of it breaking containment by consistently producing good results, preferably through Attachment work.
-
-That said, if it breaches containment, it's pretty hard to deal with in the early game, so leave it alone if you can safely finish the day or retry if you must. If you have to suppress it, try long-ranged weapons, preferably ones that deal WHITE damage, and watch out for the singing attack that drains SP. Take your employees away if it starts.`,
-
-    'O-02-56': `Pure bait. It looks cute and innocent, don't fall for it.
-
-Basically, it can be safely examined via Insight work and yields some nice E.G.O equipment, including a ranged weapon (although relatively expensive in comparison to other early-game options).
-
-Its Qliphoth Counter has a chance of decreasing whenever you start working on another abnormality, and employees panicking will also lower it. Expect it to breach containment somewhat frequently. No matter what you do, don't try to suppress it. That's practically guaranteed death in the early game.
-
-Fortunately, the birb deals laughable damage when it's on the loose and usually goes back to containment on its own, so you just need to play the waiting game and not interact with it for a while.
-
-Interestingly enough, it can actually help employees recover from panic by pecking some sense back into them. Apparently, the birb has some redeeming qualities after all.`,
-
-    'T-09-09': `This is one of the very first tools you might encounter. Tools work a little differently than regular abnormalities. They don't yield E.G.O equipment and have different means of unlocking their information, such as time spent using them. Using them also doesn't progress the Qliphoth Meltdown Gauge, so they can be explored for relatively cheap.
-
-Theresia in particular is useful, but with a catch. It will periodically recover SP for employees belonging to the entire department where it's contained, including the employee operating it if they belong to that department.
-
-Between the 20th and 30th second of continuous use, however, the employee operating it will start losing SP rapidly and, if left unattended, will eventually PANIC.
-
-Recommendation is to use it sparingly whenever you need to quickly replenish SP across a department, but beware because you'll need to micromanage the cancellation before the 20-second mark.
-
-You'd be surprised at how much damage a single panicking employee can indirectly cause. Speaking from experience here.`,
-  } as Record<string, string>,
+  /** Field notes by classification code, for logged abnormalities. Read as written. */
+  notes: notes as Record<string, string>,
 }

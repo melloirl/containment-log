@@ -20,6 +20,21 @@ describe('entries', () => {
       expect(Number.isNaN(Date.parse(entry.logged)), code).toBe(false)
     }
   })
+
+  // The entries are JSON, so the compiler does not check these.
+  it('only use rating words, work types and results the catalog knows', () => {
+    for (const [code, entry] of Object.entries(ENTRIES)) {
+      for (const [axis, level] of Object.entries(entry.rating ?? {})) {
+        expect(AXES.find((x) => x.key === axis)?.levels, `${code} ${axis}`).toContain(level)
+      }
+      for (const [work, result] of Object.entries(entry.works ?? {})) {
+        expect(WORKS.map((w) => w.key), code).toContain(work)
+        expect(['good', 'bad'], `${code} ${work}`).toContain(result)
+      }
+      expect(Number.isInteger(entry.agentsLost ?? 0) && (entry.agentsLost ?? 0) >= 0, code).toBe(true)
+      expect(typeof (entry.fan ?? false), code).toBe('boolean')
+    }
+  })
 })
 
 describe('English locale', () => {

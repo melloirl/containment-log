@@ -1,8 +1,7 @@
 import { computed, readonly, ref } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
-import { ENTRIES } from '@/content/entries'
 import { visibleUnits } from '@/domain/roster'
-import type { Abnormality, Entry, RosterFilter, UnitView } from '@/domain/types'
+import type { Abnormality, RosterFilter, UnitView } from '@/domain/types'
 import { useContainmentLog, type ContainmentLog } from './useContainmentLog'
 
 /**
@@ -32,10 +31,7 @@ export interface LogBrowser {
   close(): string | null
 }
 
-export function createLogBrowser(
-  log: ContainmentLog,
-  entries: Readonly<Record<string, Entry>> = ENTRIES,
-): LogBrowser {
+export function createLogBrowser(log: ContainmentLog): LogBrowser {
   const query = ref('')
   const filter = ref<RosterFilter>('all')
   const loggedOnly = ref(false)
@@ -46,7 +42,7 @@ export function createLogBrowser(
     selectedCode.value === null ? null : (log.byCode(selectedCode.value) ?? null),
   )
   const units = computed(() =>
-    visibleUnits(log.roster.value, entries, log.shield.value, {
+    visibleUnits(log.roster.value, log.entries, log.shield.value, {
       q: query.value,
       filter: filter.value,
       loggedOnly: loggedOnly.value,
