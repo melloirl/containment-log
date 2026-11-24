@@ -1,0 +1,46 @@
+// Shared Sass vocabulary. Emits no CSS on its own, so every SFC can load it:
+//   @use '@/styles/mixins' as *;
+
+// The one layout breakpoint. Below it the file opens as a full-screen sheet;
+// from it up the file is a sticky side panel. Keep in step with COMPACT_QUERY
+// in src/composables/useMediaQuery.ts.
+$desktop: 1000px;
+
+@mixin desktop {
+  @media (min-width: $desktop) {
+    @content;
+  }
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
+}
+
+// Rectangle with the top-right corner cut off.
+@mixin cut-corner($cut) {
+  clip-path: polygon(0 0, calc(100% - #{$cut}) 0, 100% #{$cut}, 100% 100%, 0 100%);
+}
+
+// Thin amber scrollbar that matches the containment panels.
+@mixin containment-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-thumb) var(--ink);
+
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    background: var(--ink);
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--scroll-thumb);
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+  }
+  &::-webkit-scrollbar-button {
+    display: none;
+  }
+}

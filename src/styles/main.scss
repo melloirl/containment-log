@@ -1,0 +1,5 @@
+// Global layer: tokens, element defaults, and the few primitives shared by more
+// than one component. Everything else is scoped inside its component.
+@use 'tokens';
+@use 'base';
+@use 'primitives';

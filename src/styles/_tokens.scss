@@ -1,0 +1,19 @@
+// Design tokens. They stay CSS custom properties, not Sass variables, because
+// components re-point them per element at runtime: `--c` carries a risk colour,
+// `--k` a review-axis colour, `--w` a work-type colour.
+:root {
+  --ink: #0f0b06;
+  --cell: #1a140c;
+  --cell-2: #221a0f;
+  --line: #4b3a1b;
+  --scroll-thumb: #956f36;
+  --amber: #f59a1a;
+  --bone: #efe3c8;
+  --dust: #a08f6b;
+  --gold: #ffd23f;
+  --useful: #7fd8ff;
+  --danger: #ff5d7a;
+  --display: "Antonio", "Oswald", "Arial Narrow", Impact, sans-serif;
+  --body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --cut: 14px;
+}

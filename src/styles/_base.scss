@@ -1,0 +1,57 @@
+// Element defaults: reset, body, focus ring, page scrollbar, html.locked.
+@use 'mixins' as *;
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--ink);
+  color: var(--bone);
+  font: 400 16px/1.5 var(--body);
+  background-image: radial-gradient(120% 60% at 50% -10%, rgba(245, 154, 26, .10), transparent 60%);
+  background-attachment: fixed;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--bone);
+  outline-offset: 2px;
+}
+
+// The page half of the legacy `html, .file` scrollbar rules. The file panel
+// includes the same mixin on `.file`.
+html {
+  @include containment-scrollbar;
+}
+
+// Set while the file is a full-screen sheet on a compact screen.
+html.locked {
+  overflow: hidden;
+
+  @include desktop {
+    overflow: auto;
+  }
+}
