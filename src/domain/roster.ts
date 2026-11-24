@@ -1,5 +1,4 @@
-import { ABNORMALITIES } from './catalog'
-import type { LogStateView, RosterFilter, RosterQuery, UnitView } from './types'
+import type { Abnormality, Entry, RosterFilter, RosterQuery, UnitView } from './types'
 
 /** Searches shorter than this never reveal the name of a sealed unit. */
 const PEEK_MIN = 3
@@ -17,12 +16,17 @@ export function isRiskFilter(filter: RosterFilter): boolean {
  * sealed unit's name counts once three or more letters are typed (a peek). A
  * risk filter hides sealed units, since their risk is a secret.
  */
-export function visibleUnits(state: LogStateView, query: RosterQuery): UnitView[] {
+export function visibleUnits(
+  roster: readonly Abnormality[],
+  entries: Readonly<Record<string, Entry>>,
+  shield: boolean,
+  query: RosterQuery,
+): UnitView[] {
   const q = query.q.trim().toLowerCase()
   const out: UnitView[] = []
-  for (const a of ABNORMALITIES) {
-    const met = !!state.entries[a.code]
-    const sealed = !met && state.shield
+  for (const a of roster) {
+    const met = !!entries[a.code]
+    const sealed = !met && shield
     const codeHit = a.code.toLowerCase().indexOf(q) > -1
     const nameHit = a.name.toLowerCase().indexOf(q) > -1
     const peek = sealed && q.length >= PEEK_MIN && nameHit
@@ -37,7 +41,7 @@ export function visibleUnits(state: LogStateView, query: RosterQuery): UnitView[
   }
   out.sort((x, y) => {
     if (x.met !== y.met) return x.met ? -1 : 1
-    if (!x.met && state.shield) return x.abnormality.num - y.abnormality.num
+    if (!x.met && shield) return x.abnormality.num - y.abnormality.num
     return (
       x.abnormality.risk - y.abnormality.risk ||
       x.abnormality.name.localeCompare(y.abnormality.name)
@@ -46,15 +50,10 @@ export function visibleUnits(state: LogStateView, query: RosterQuery): UnitView[
   return out
 }
 
-/** Text for an empty grid. A search wins over a risk filter, which wins over logged-only. */
-export function emptyMessage(query: RosterQuery): string {
-  if (query.q.trim())
-    return 'Nothing matches that search. Try the classification code shown on the containment unit, like O-03-03.'
-  if (isRiskFilter(query.filter)) return 'Nothing logged at this risk level yet.'
-  if (query.loggedOnly) return 'Your log is empty. Open any unit and log your first encounter.'
-  return 'Nothing to show with these filters.'
-}
-
-export function countLabel(n: number): string {
-  return n + (n === 1 ? ' unit shown' : ' units shown')
+/** Why the grid is empty, as a key under `grid.empty`. A search wins over a risk filter, which wins over logged-only. */
+export function emptyReason(query: RosterQuery): 'search' | 'risk' | 'logged' | 'filters' {
+  if (query.q.trim()) return 'search'
+  if (isRiskFilter(query.filter)) return 'risk'
+  if (query.loggedOnly) return 'logged'
+  return 'filters'
 }

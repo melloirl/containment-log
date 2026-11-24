@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { ReviewAxis } from '@/domain/types'
 
 const props = defineProps<{
@@ -8,64 +9,41 @@ const props = defineProps<{
   level: number
 }>()
 
-const emit = defineEmits<{
-  rate: [level: number]
-}>()
+const { t } = useI18n()
 
-const axisStyle = computed(() => '--k:var(' + props.axis.colorVar + ')')
-const setName = computed(() => (props.level ? props.axis.levels[props.level - 1]! : 'Not rated'))
-
-// Legacy peek(): pointing at a segment, or reaching one by keyboard, names the
-// level it would set. Each pointer/focus event decides on its own, last one wins.
-const peeked = ref<string | null>(null)
-const shown = computed(() => peeked.value ?? setName.value)
-
-function focusVisible(event: Event): boolean {
-  return (event.currentTarget as Element).matches(':focus-visible')
-}
-
-function onFocus(event: FocusEvent, name: string): void {
-  peeked.value = focusVisible(event) ? name : null
-}
-
-function onClick(event: MouseEvent, name: string, n: number): void {
-  // Legacy re-renders the meter here and re-focuses the pressed segment (the
-  // focus rule runs again), then Chrome sends pointerover to whatever segment
-  // now sits under the pointer. Replay both on the segments that stayed.
-  const hovered = (event.currentTarget as Element).parentElement?.querySelector('.seg:hover')
-  peeked.value = hovered ? hovered.getAttribute('title') : focusVisible(event) ? name : null
-  emit('rate', n)
-}
+const label = computed(() => t('axis.' + props.axis.key + '.label'))
+const levelName = (key: string): string => t('axis.' + props.axis.key + '.levels.' + key)
+const current = computed(() => {
+  const key = props.axis.levels[props.level - 1]
+  return key ? levelName(key) : t('review.notRated')
+})
 </script>
 
 <template>
-  <div class="axis" :style.attr="axisStyle">
+  <div class="axis" :style="'--k:var(' + axis.colorVar + ')'">
     <div class="axis-top">
-      <span class="lab">{{ axis.label }}</span>
-      <span class="val" :class="{ unset: !level, peek: shown !== setName }">{{ shown }}</span>
+      <span class="lab">{{ label }}</span>
+      <span class="val" :class="{ unset: !level }">{{ current }}</span>
     </div>
-    <div class="meter" :class="{ unset: !level }" role="group" :aria-label="axis.label">
-      <button
-        v-for="(name, i) in axis.levels"
-        :key="name"
-        type="button"
+    <!-- The narrow first cell is the scale's zero: a real answer, lit on its own. -->
+    <div
+      class="meter"
+      :class="{ unset: !level }"
+      role="img"
+      :aria-label="t('review.axisLevel', { axis: label, level: current })"
+    >
+      <span
+        v-for="(key, i) in axis.levels"
+        :key="key"
         class="seg"
         :class="{ zero: i === 0, on: level >= i + 1 }"
-        :aria-pressed="level === i + 1"
-        :aria-label="axis.label + ': ' + name"
-        :title="name"
-        @click="onClick($event, name, i + 1)"
-        @pointerover="peeked = name"
-        @pointerout="peeked = null"
-        @focus="onFocus($event, name)"
-        @blur="peeked = null"
+        :title="levelName(key)"
       />
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
-// Rules in legacy source order; .val.unset/.val.peek rely on it.
 .axis {
   display: grid;
   gap: 5px;
@@ -94,11 +72,6 @@ function onClick(event: MouseEvent, name: string, n: number): void {
   color: var(--dust);
 }
 
-.axis-top .val.peek {
-  color: var(--bone);
-}
-
-// The narrow first cell is the scale's zero: a real answer, lit on its own.
 .meter {
   display: flex;
   gap: 2px;
@@ -110,8 +83,6 @@ function onClick(event: MouseEvent, name: string, n: number): void {
 .seg {
   flex: 1;
   height: 24px;
-  padding: 0;
-  border: 0;
   background: #2a2012;
 }
 
@@ -125,9 +96,5 @@ function onClick(event: MouseEvent, name: string, n: number): void {
 
 .meter.unset .seg {
   background: repeating-linear-gradient(135deg, #17110a 0 6px, #231a0e 6px 12px);
-}
-
-.seg:hover {
-  box-shadow: inset 0 0 0 2px var(--bone);
 }
 </style>

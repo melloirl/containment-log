@@ -1,20 +1,15 @@
-/** Date an entry was first logged, in the reader's locale, e.g. "24 Nov 2026". Empty when the date cannot be formatted. */
-export function formatDate(timestamp: number): string {
-  try {
-    return new Date(timestamp).toLocaleString(undefined, {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    })
-  } catch {
-    return ''
-  }
+/** A YYYY-MM-DD day in the given locale, e.g. "24 Nov 2026". Returns the input when it cannot be read. */
+export function formatDay(day: string, locale: string): string {
+  const [y, m, d] = day.split('-').map(Number)
+  const date = new Date(Date.UTC(y ?? NaN, (m ?? NaN) - 1, d ?? NaN))
+  if (Number.isNaN(date.getTime())) return day
+  return date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
 }
 
-/** The remark next to the agents-lost counter. */
-export function lostRemark(lost: number): string {
-  if (lost === 0) return 'A clean record. So far.'
-  if (lost < 5) return 'Acceptable losses.'
-  if (lost < 15) return 'HR has questions.'
-  return 'Maybe try a different work type.'
+/** Which remark goes next to the agents-lost count, as a key under `lost.remark`. */
+export function lostRemark(lost: number): 'clean' | 'acceptable' | 'questions' | 'tooMany' {
+  if (lost === 0) return 'clean'
+  if (lost < 5) return 'acceptable'
+  if (lost < 15) return 'questions'
+  return 'tooMany'
 }

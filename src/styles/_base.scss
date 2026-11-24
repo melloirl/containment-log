@@ -41,7 +41,7 @@ p {
   outline-offset: 2px;
 }
 
-// The page half of the legacy `html, .file` scrollbar rules. The file panel
+// The page scrollbar. The file panel
 // includes the same mixin on `.file`.
 html {
   @include containment-scrollbar;

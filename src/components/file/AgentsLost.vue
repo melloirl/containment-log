@@ -4,20 +4,14 @@ import { lostRemark } from '@/domain/format'
 defineProps<{
   lost: number
 }>()
-
-defineEmits<{
-  adjust: [delta: number]
-}>()
 </script>
 
 <template>
   <section class="sec">
-    <h3>Agents lost to it</h3>
+    <h3>{{ $t('lost.title') }}</h3>
     <div class="lost">
-      <button type="button" class="step" aria-label="One fewer" @click="$emit('adjust', -1)">−</button>
-      <output aria-live="polite">{{ lost }}</output>
-      <button type="button" class="step" aria-label="One more" @click="$emit('adjust', 1)">+</button>
-      <span class="hint">{{ lostRemark(lost) }}</span>
+      <output>{{ lost }}</output>
+      <span class="hint">{{ $t('lost.remark.' + lostRemark(lost)) }}</span>
     </div>
   </section>
 </template>
@@ -34,18 +28,5 @@ defineEmits<{
   text-align: center;
   font: 700 2.2rem/1 var(--display);
   color: var(--bone);
-}
-
-.step {
-  width: 42px;
-  height: 42px;
-  background: transparent;
-  border: 1px solid var(--line);
-  font: 600 1.4rem/1 var(--display);
-  color: var(--bone);
-}
-
-.step:hover {
-  border-color: var(--amber);
 }
 </style>

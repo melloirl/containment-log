@@ -10,7 +10,7 @@ const props = defineProps<{
   total: number
 }>()
 
-/** One entry per cell: the legacy inline style text for a lit cell, null for an unlit one. */
+/** One entry per cell: the inline style of a lit cell, null for an unlit one. */
 const cells = computed(() =>
   Array.from({ length: props.total }, (_, i) => {
     const a = props.logged[i]
@@ -23,7 +23,7 @@ const cells = computed(() =>
   <div
     class="gauge"
     role="img"
-    :aria-label="logged.length + ' of ' + total + ' abnormalities logged'"
+    :aria-label="$t('stats.gauge', { logged: logged.length, total })"
   >
     <template v-for="(style, i) in cells" :key="i">
       <i v-if="style" class="on" :style.attr="style" />

@@ -1,19 +1,18 @@
 <script setup lang="ts">
-// Container. Reads useLogBrowser() and useContainmentLog().
-// Renders the .grid of UnitTile (or the .empty message) and the .note about the spoiler shield.
+// Container. Renders the .grid of UnitTile (or the .empty message) and the .note about the spoiler shield.
 import { computed } from 'vue'
-import { emptyMessage, isRiskFilter } from '@/domain/roster'
+import { emptyReason, isRiskFilter } from '@/domain/roster'
 import { useContainmentLog } from '@/composables/useContainmentLog'
 import { useLogBrowser } from '@/composables/useLogBrowser'
 import UnitTile from './UnitTile.vue'
 
 const log = useContainmentLog()
-const { query, filter, loggedOnly, units, selectedCode, freshCode, select } = useLogBrowser()
+const { query, filter, loggedOnly, units, selectedCode, select } = useLogBrowser()
 
 const empty = computed(() =>
-  emptyMessage({ q: query.value, filter: filter.value, loggedOnly: loggedOnly.value }),
+  emptyReason({ q: query.value, filter: filter.value, loggedOnly: loggedOnly.value }),
 )
-const showNote = computed(() => isRiskFilter(filter.value) && log.state.shield)
+const showNote = computed(() => isRiskFilter(filter.value) && log.shield.value)
 </script>
 
 <template>
@@ -23,15 +22,14 @@ const showNote = computed(() => isRiskFilter(filter.value) && log.state.shield)
         v-for="unit in units"
         :key="unit.abnormality.code"
         :unit="unit"
-        :entry="log.state.entries[unit.abnormality.code]"
+        :entry="log.entry(unit.abnormality.code)"
         :selected="selectedCode === unit.abnormality.code"
-        :fresh="freshCode === unit.abnormality.code"
         @open="select(unit.abnormality.code)"
       />
     </template>
-    <p v-else class="empty">{{ empty }}</p>
+    <p v-else class="empty">{{ $t('grid.empty.' + empty) }}</p>
   </div>
-  <p v-if="showNote" class="note">Unidentified units stay hidden while you filter by risk level. Turn off the spoiler shield in Settings to see the full roster.</p>
+  <p v-if="showNote" class="note">{{ $t('grid.shieldNote') }}</p>
 </template>
 
 <style scoped lang="scss">

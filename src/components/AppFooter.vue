@@ -1,11 +1,13 @@
 <script setup lang="ts">
-// Static credits.
+import { CATALOG } from '@/domain/catalog'
+
+const GALLERY = 'https://lobotomycorporation.wiki.gg/wiki/Category:Abnormality_Portraits'
 </script>
 
 <template>
   <footer>
-    <p>Unofficial fan-made tracker for Lobotomy Corporation by Project Moon. The roster covers the 85 released abnormalities; origin and form are read from each classification code, following the community interpretation.</p>
-    <p>In-game portraits by Project Moon. <a href="https://lobotomycorporation.wiki.gg/wiki/Category:Abnormality_Portraits">Lobotomy Corporation Wiki portrait gallery</a></p>
+    <p>{{ $t('footer.about', { count: CATALOG.length }) }}</p>
+    <p>{{ $t('footer.portraits') }} <a :href="GALLERY">{{ $t('footer.gallery') }}</a></p>
   </footer>
 </template>
 

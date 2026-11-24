@@ -2,18 +2,16 @@
 import { computed } from 'vue'
 import AbnormalityPortrait from '@/components/shared/AbnormalityPortrait.vue'
 import StarIcon from '@/components/shared/StarIcon.vue'
-import { RISKS } from '@/domain/catalog'
-import { verdict } from '@/domain/verdict'
-import type { EntryView, UnitView } from '@/domain/types'
+import { AXES, RISKS } from '@/domain/catalog'
+import { levelOf, verdict } from '@/domain/verdict'
+import type { Entry, UnitView } from '@/domain/types'
 
 const props = defineProps<{
   unit: UnitView
   /** The log entry, when the unit is logged. */
-  entry?: EntryView
+  entry?: Entry
   /** Its file is open. */
   selected: boolean
-  /** Logged a moment ago: plays the flash. */
-  fresh: boolean
 }>()
 
 defineEmits<{
@@ -22,35 +20,25 @@ defineEmits<{
 
 const risk = computed(() => RISKS[props.unit.abnormality.risk]!)
 
-// Class list in legacy order: unit, then sealed, or open-file and fresh.
-const classes = computed(() => {
-  let cls = 'unit'
-  if (props.unit.sealed) return cls + ' sealed'
-  if (!props.unit.met) cls += ' open-file'
-  if (props.fresh) cls += ' fresh'
-  return cls
-})
-
-// Legacy omits the style attribute on sealed tiles.
-const style = computed(() => (props.unit.sealed ? undefined : '--c:' + risk.value.color))
-
 /** Logged tile: verdict, fan, losses, or the review status when none of those show. */
 const meta = computed(() => {
   const e = props.unit.met ? props.entry : undefined
   if (!e) return null
   const vd = verdict(e)
-  const status =
-    !vd && !e.fan && !e.lost ? (e.a.u || e.a.d || e.a.m ? 'Review unfinished' : 'Not reviewed yet') : null
-  return { vd, fan: e.fan, lost: e.lost, status }
+  const lost = e.agentsLost ?? 0
+  const started = AXES.some((x) => levelOf(e, x.key))
+  const status = !vd && !e.fan && !lost ? (started ? 'unit.reviewUnfinished' : 'unit.notReviewed') : null
+  return { vd, fan: !!e.fan, lost, status }
 })
 </script>
 
 <template>
   <button
     type="button"
-    :class="classes"
+    class="unit"
+    :class="{ sealed: unit.sealed, 'open-file': !unit.sealed && !unit.met }"
     :data-code="unit.abnormality.code"
-    :style.attr="style"
+    :style="unit.sealed ? undefined : '--c:' + risk.color"
     :aria-current="selected ? 'true' : undefined"
     @click="$emit('open')"
   >
@@ -59,7 +47,7 @@ const meta = computed(() => {
         <span class="u-code">{{ unit.abnormality.code }}</span>
         <span v-if="unit.peek" class="u-name">{{ unit.abnormality.name }}</span>
         <span v-else class="bars" aria-hidden="true"><i /><i /></span>
-        <span class="u-meta">{{ unit.peek ? 'Not logged' : 'Unidentified' }}</span>
+        <span class="u-meta">{{ $t(unit.peek ? 'unit.notLogged' : 'unit.unidentified') }}</span>
       </template>
       <template v-else>
         <span class="unit-id">
@@ -74,13 +62,13 @@ const meta = computed(() => {
           <template v-if="meta">
             <template v-if="meta.vd">
               <span class="score">{{ meta.vd.score }}</span>
-              <span>{{ meta.vd.call }}</span>
+              <span>{{ $t('verdict.' + meta.vd.tier + '.call') }}</span>
             </template>
-            <span v-if="meta.fan" class="m k-f" title="Fan"><StarIcon /></span>
-            <span v-if="meta.lost">{{ meta.lost }} lost</span>
-            <span v-if="meta.status">{{ meta.status }}</span>
+            <span v-if="meta.fan" class="m k-f" :title="$t('unit.fan')"><StarIcon /></span>
+            <span v-if="meta.lost">{{ $t('unit.lost', { n: meta.lost }) }}</span>
+            <span v-if="meta.status">{{ $t(meta.status) }}</span>
           </template>
-          <span v-else>Not logged</span>
+          <span v-else>{{ $t('unit.notLogged') }}</span>
         </span>
       </template>
     </span>
@@ -88,9 +76,8 @@ const meta = computed(() => {
 </template>
 
 <style scoped lang="scss">
-@use '@/styles/mixins' as *;
 
-// Rules in legacy source order; equal-specificity pairs rely on it.
+// Order matters: pairs of equal specificity rely on it.
 .unit {
   --c: var(--line);
   display: block;
@@ -256,21 +243,6 @@ const meta = computed(() => {
   box-shadow: inset 0 0 0 1px var(--c);
 }
 
-.unit.fresh .in {
-  animation: flash .7s steps(6);
-}
-
-@keyframes flash {
-  0%,
-  40% {
-    background: var(--c);
-  }
-  100% {
-    background: var(--cell);
-  }
-}
-
-// After `.u-meta .m` (same specificity): the fan star is gold.
 .m.k-f {
   color: var(--gold);
 }
@@ -279,9 +251,4 @@ const meta = computed(() => {
   fill: currentColor;
 }
 
-@include reduced-motion {
-  .unit.fresh .in {
-    animation: none;
-  }
-}
 </style>

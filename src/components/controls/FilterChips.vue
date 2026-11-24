@@ -5,38 +5,35 @@ import type { RosterFilter } from '@/domain/types'
 const filter = defineModel<RosterFilter>('filter', { required: true })
 const loggedOnly = defineModel<boolean>('loggedOnly', { required: true })
 
-/** Value, label, and the legacy inline style text (null when the chip has no colour). */
-const chips: readonly { value: RosterFilter; label: string; style: string | null }[] = [
-  { value: 'all', label: 'All', style: null },
-  ...RISKS.map((r, i) => ({
-    value: String(i) as RosterFilter,
-    label: r.key,
-    style: '--c:' + r.color,
-  })),
-  { value: 'tools', label: 'Tools', style: null },
-]
+/** Risk chips carry the in-game level name, which is the same in every language. */
+const riskChips = RISKS.map((r, i) => ({
+  value: String(i) as RosterFilter,
+  label: r.key,
+  style: '--c:' + r.color,
+}))
 </script>
 
 <template>
-  <div class="chips" role="group" aria-label="Filters">
+  <div class="chips" role="group" :aria-label="$t('controls.filters')">
+    <button type="button" class="chip" :aria-pressed="filter === 'all'" @click="filter = 'all'">
+      <span>{{ $t('controls.all') }}</span>
+    </button>
     <button
-      v-for="chip in chips"
+      v-for="chip in riskChips"
       :key="chip.value"
       type="button"
       class="chip"
       :aria-pressed="filter === chip.value"
-      :style.attr="chip.style ?? undefined"
+      :style="chip.style"
       @click="filter = chip.value"
     >
       <span>{{ chip.label }}</span>
     </button>
-    <button
-      type="button"
-      class="chip gap"
-      :aria-pressed="loggedOnly"
-      @click="loggedOnly = !loggedOnly"
-    >
-      <span>Logged only</span>
+    <button type="button" class="chip" :aria-pressed="filter === 'tools'" @click="filter = 'tools'">
+      <span>{{ $t('controls.tools') }}</span>
+    </button>
+    <button type="button" class="chip gap" :aria-pressed="loggedOnly" @click="loggedOnly = !loggedOnly">
+      <span>{{ $t('controls.loggedOnly') }}</span>
     </button>
   </div>
 </template>

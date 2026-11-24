@@ -1,13 +1,8 @@
 /**
- * Domain model. Pure types: no Vue, no DOM.
+ * Domain model. Pure types: no Vue, no DOM, no text for the reader.
  *
- * Two families live here:
- *  - catalog types describe the fixed roster and the rating vocabulary;
- *  - persisted types describe what sits in localStorage and in backup text.
- *
- * The persisted shape is schema v1 and is FROZEN. Field names, value ranges and
- * the order keys are written in must not change: a backup copied from the old
- * single-file app has to restore here, and the other way round.
+ * Everything a person reads (names, labels, notes) lives in the locale files
+ * under src/i18n/locales. The domain deals in codes and keys.
  */
 
 /* ---------- catalog ---------- */
@@ -16,6 +11,7 @@
 export type RiskIndex = 0 | 1 | 2 | 3 | 4
 
 export interface RiskLevel {
+  /** In-game name. A proper noun, shown as is in every language. */
   readonly key: 'ZAYIN' | 'TETH' | 'HE' | 'WAW' | 'ALEPH'
   /** Hex colour that drives `--c` wherever the risk is shown. */
   readonly color: string
@@ -23,9 +19,9 @@ export interface RiskLevel {
 
 export type OriginLetter = 'O' | 'T' | 'F' | 'D'
 
-export interface Abnormality {
+/** One row of the roster, without its name. */
+export interface CatalogEntry {
   readonly code: string
-  readonly name: string
   readonly risk: RiskIndex
   /** Cell in the silhouette atlas (10 columns by 9 rows, row-major). */
   readonly portrait: number
@@ -33,6 +29,7 @@ export interface Abnormality {
   readonly portraitPath: string
   /** Parsed from a standard code such as O-03-03; null when the code is non-standard. */
   readonly letter: OriginLetter | null
+  /** Key of the form message, read from the code's middle digits; null when unknown or non-standard. */
   readonly form: string | null
   /** Trailing number of the code; 999 when the code is non-standard. Sort key under the spoiler shield. */
   readonly num: number
@@ -40,80 +37,68 @@ export interface Abnormality {
   readonly tool: boolean
 }
 
+/** A roster row with its name in the reader's language. */
+export interface Abnormality extends CatalogEntry {
+  readonly name: string
+}
+
 export type WorkKey = 'instinct' | 'insight' | 'attachment' | 'repression'
 
 export interface WorkType {
   readonly key: WorkKey
-  readonly label: string
   /** Hex colour that drives `--w`. */
   readonly color: string
 }
 
-export type AxisKey = 'u' | 'd' | 'm'
+export type AxisKey = 'usefulness' | 'danger' | 'management'
 
 export interface ReviewAxis {
   readonly key: AxisKey
-  readonly label: string
   /** Name of the CSS custom property that colours the axis, e.g. `--useful`. Drives `--k`. */
   readonly colorVar: string
-  /** Level names from least to most. A stored rating is 0 (not rated) or the 1-based position. */
+  /** Level keys from least to most. */
   readonly levels: readonly string[]
 }
 
+export type VerdictTierKey = 'always' | 'good' | 'fair' | 'desperate' | 'never'
+
 export interface VerdictTier {
+  readonly key: VerdictTierKey
   /** Lowest score (out of 10) that earns this tier. */
   readonly min: number
-  readonly call: string
-  readonly why: string
 }
 
 export interface Verdict {
   readonly score: number
-  readonly call: string
-  readonly why: string
+  readonly tier: VerdictTierKey
 }
 
-/* ---------- persisted, schema v1 (frozen) ---------- */
+/* ---------- authored content ---------- */
 
-/** 1 = goes well, -1 = avoid. Unknown is stored as an absent key. */
-export type WorkResult = 1 | -1
+export type UsefulnessLevel = 'useless' | 'neutral' | 'useful'
+export type DangerLevel = 'peaceful' | 'safeish' | 'neutral' | 'dangerous' | 'extreme'
+export type ManagementLevel = 'none' | 'periodic' | 'constant' | 'micromanage'
 
-export interface Scrap {
-  t: number
-  x: string
+export interface Rating {
+  readonly usefulness?: UsefulnessLevel
+  readonly danger?: DangerLevel
+  readonly management?: ManagementLevel
 }
 
-/** Key order when written: met, a, fan, w, lost, note, scraps, then r if present. */
+/**
+ * One logged abnormality, written by hand in src/content/entries.ts.
+ * Its note is text, so it lives in the locale files under `notes`.
+ */
 export interface Entry {
-  /** Timestamp (ms) of the first logged encounter. */
-  met: number
-  a: Record<AxisKey, number>
-  fan: boolean
-  w: Partial<Record<WorkKey, WorkResult>>
-  lost: number
-  note: string
-  /** No screen for now; kept in storage and backups. */
-  scraps: Scrap[]
-  /** Ratings from the old three-icon scale; carried through untouched. */
-  r?: Record<string, unknown>
+  /** Day of the first encounter, as YYYY-MM-DD. */
+  readonly logged: string
+  /** Leave an axis out until it is rated. The verdict needs all three. */
+  readonly rating?: Rating
+  readonly fan?: boolean
+  /** Leave a work type out while its result is unknown. */
+  readonly works?: Partial<Readonly<Record<WorkKey, 'good' | 'bad'>>>
+  readonly agentsLost?: number
 }
-
-/** Key order when written: v, shield, entries. */
-export interface LogState {
-  v: 1
-  shield: boolean
-  entries: Record<string, Entry>
-}
-
-export type DeepReadonly<T> = T extends readonly (infer U)[]
-  ? readonly DeepReadonly<U>[]
-  : T extends object
-    ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
-    : T
-
-/** What components receive. Only the log store writes to the state. */
-export type EntryView = DeepReadonly<Entry>
-export type LogStateView = DeepReadonly<LogState>
 
 /* ---------- roster browsing ---------- */
 
@@ -126,17 +111,13 @@ export interface RosterQuery {
   readonly loggedOnly: boolean
 }
 
-/** One tile of the grid, already resolved against the log and the spoiler shield. */
+/** One tile of the grid, already resolved against the entries and the spoiler shield. */
 export interface UnitView {
   readonly abnormality: Abnormality
-  /** Logged at least once. */
+  /** Has an entry. */
   readonly met: boolean
-  /** Not logged while the spoiler shield is on: name, silhouette and risk are hidden. */
+  /** No entry while the spoiler shield is on: name, silhouette and risk are hidden. */
   readonly sealed: boolean
   /** Sealed, but the search typed three or more letters of its name, so the name shows. */
   readonly peek: boolean
 }
-
-export type RestoreResult =
-  | { readonly ok: true; readonly count: number }
-  | { readonly ok: false; readonly reason: 'empty' | 'not-json' | 'not-backup' }

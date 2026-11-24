@@ -1,5 +1,4 @@
-// Primitives used by more than one component: .btn, .linkish, .sec, .hint, .row, .msg.
-@use 'mixins' as *;
+// Primitives used by more than one component: .linkish, .sec, .hint.
 
 .linkish {
   background: none;
@@ -8,36 +7,6 @@
   color: var(--amber);
   text-decoration: underline;
   text-underline-offset: 3px;
-}
-
-.btn {
-  border: 0;
-  padding: 10px 20px;
-  background: var(--amber);
-  color: #000;
-  font: 700 1.05rem/1.2 var(--display);
-  text-transform: uppercase;
-  letter-spacing: .07em;
-  @include cut-corner(10px);
-
-  &:hover {
-    background: var(--bone);
-  }
-
-  &.ghost {
-    background: transparent;
-    color: var(--bone);
-    box-shadow: inset 0 0 0 1px var(--line);
-    clip-path: none;
-  }
-
-  &.ghost:hover {
-    box-shadow: inset 0 0 0 1px var(--amber);
-  }
-
-  &.danger {
-    background: #ff4040;
-  }
 }
 
 .sec {
@@ -55,18 +24,6 @@
 }
 
 .hint {
-  color: var(--dust);
-  font-size: .9rem;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  align-items: center;
-}
-
-.msg {
   color: var(--dust);
   font-size: .9rem;
 }

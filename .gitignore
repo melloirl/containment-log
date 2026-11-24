@@ -1,5 +1,4 @@
 node_modules/
 *.local
 .vite/
-tools/parity/out/
 dist/

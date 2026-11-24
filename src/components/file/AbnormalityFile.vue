@@ -1,35 +1,24 @@
 <script setup lang="ts">
+// Container. Renders aside.file: the empty hint, or the open abnormality's file.
+// Owns the sheet behaviour: .open, html.locked on compact screens, Escape, scroll reset, and focus hand-offs.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
 import AgentsLost from './AgentsLost.vue'
 import FileHeader from './FileHeader.vue'
 import FileNotes from './FileNotes.vue'
-import FileStatus from './FileStatus.vue'
-import FileUnlogged from './FileUnlogged.vue'
 import PerformanceReview from './PerformanceReview.vue'
 import WorkResults from './WorkResults.vue'
 import { useContainmentLog } from '@/composables/useContainmentLog'
 import { useLogBrowser } from '@/composables/useLogBrowser'
 import { useIsCompact } from '@/composables/useMediaQuery'
+import { formatDay } from '@/domain/format'
 
 const log = useContainmentLog()
-const { selected, selectCount, confirmingRemoval, close, markFresh, clearFresh } = useLogBrowser()
+const { selected, selectCount, close } = useLogBrowser()
 const isCompact = useIsCompact()
 
 const entry = computed(() => (selected.value ? log.entry(selected.value.code) : undefined))
-const sealed = computed(() => !entry.value && log.state.shield)
-
-// The name wipe. Legacy keeps `declass` on the h2 until the file next re-renders
-// (any file action but typing a note, opening or closing a file, the shield,
-// restore, erase), and while it stays the finished wipe's clip-path keeps
-// clipping the h2. The tile's freshCode also ends on a search or a filter, which
-// leave the file alone, so the file tracks its own flag. Everything that ends the
-// wipe ends the tile's flag too.
-const wipeCode = ref<string | null>(null)
-const endWipe = () => {
-  wipeCode.value = null
-  clearFresh()
-}
-watch([confirmingRemoval, () => log.state.shield, () => log.state.entries], endWipe)
+const note = computed(() => (selected.value && entry.value ? log.note(selected.value.code) : undefined))
+const sealed = computed(() => !entry.value && log.shield.value)
 
 const asideEl = ref<HTMLElement | null>(null)
 const header = ref<InstanceType<typeof FileHeader> | null>(null)
@@ -40,20 +29,18 @@ watchEffect(() => {
 })
 onBeforeUnmount(() => document.documentElement.classList.remove('locked'))
 
-// The user opened a tile (possibly the one already open): start at the top, and
+// The reader opened a tile (possibly the one already open): start at the top, and
 // on a sheet move focus into it.
 watch(
   selectCount,
   () => {
-    endWipe()
     if (asideEl.value) asideEl.value.scrollTop = 0
-    if (isCompact.value) header.value?.focusName({})
+    if (isCompact.value) header.value?.focusName()
   },
   { flush: 'post' },
 )
 
 async function closeFile(): Promise<void> {
-  endWipe()
   const code = close()
   await nextTick()
   if (code) document.querySelector<HTMLElement>('.unit[data-code="' + CSS.escape(code) + '"]')?.focus()
@@ -64,70 +51,26 @@ function onKeydown(event: KeyboardEvent): void {
 }
 onMounted(() => document.addEventListener('keydown', onKeydown))
 onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown))
-
-async function focusNameAfterUpdate(): Promise<void> {
-  await nextTick()
-  header.value?.focusName()
-}
-
-function onLog(code: string): void {
-  log.logEncounter(code)
-  markFresh(code)
-  wipeCode.value = code
-  void focusNameAfterUpdate()
-}
-
-function onRemove(code: string): void {
-  endWipe()
-  log.removeEntry(code)
-  confirmingRemoval.value = false
-  void focusNameAfterUpdate()
-}
-
-/** Runs a file action; like the legacy re-render that followed each one, it ends the wipe. */
-function act(change: (code: string) => void): void {
-  if (!selected.value) return
-  endWipe()
-  change(selected.value.code)
-}
 </script>
 
 <template>
-  <aside ref="asideEl" class="file" :class="{ open: !!selected }" aria-label="Abnormality file">
-    <p v-if="!selected" class="file-empty">Open a containment unit to read its file and review it.</p>
+  <aside ref="asideEl" class="file" :class="{ open: !!selected }" :aria-label="$t('file.label')">
+    <p v-if="!selected" class="file-empty">{{ $t('file.empty') }}</p>
     <template v-else>
       <div class="file-bar">
-        <button type="button" class="linkish" @click="closeFile">Back to the log</button>
+        <button type="button" class="linkish" @click="closeFile">{{ $t('file.back') }}</button>
       </div>
       <div class="file-body">
-        <FileHeader
-          ref="header"
-          :abnormality="selected"
-          :sealed="sealed"
-          :logged="!!entry"
-          :fresh="wipeCode === selected.code"
-        />
-        <FileUnlogged v-if="!entry" :sealed="sealed" @log="onLog(selected.code)" />
+        <FileHeader ref="header" :abnormality="selected" :sealed="sealed" :logged="!!entry" />
+        <div v-if="!entry" class="sec">
+          <p>{{ $t(sealed ? 'file.sealed' : 'file.unlogged') }}</p>
+        </div>
         <template v-else>
-          <FileStatus v-model:confirming="confirmingRemoval" :met="entry.met" @remove="onRemove(selected.code)" />
-          <FileNotes
-            :model-value="entry.note"
-            :name="selected.name"
-            @update:model-value="log.setNote(selected.code, $event)"
-          />
-          <!-- Keyed by code so another abnormality's file starts without a peeked label. -->
-          <PerformanceReview
-            :key="selected.code"
-            :entry="entry"
-            @rate="(axis, level) => act((code) => log.rate(code, axis, level))"
-            @toggle-fan="act(log.toggleFan)"
-          />
-          <WorkResults
-            v-if="!selected.tool"
-            :results="entry.w"
-            @cycle="(work) => act((code) => log.cycleWork(code, work))"
-          />
-          <AgentsLost :lost="entry.lost" @adjust="(delta) => act((code) => log.adjustLost(code, delta))" />
+          <p class="file-status">{{ $t('file.loggedOn', { date: formatDay(entry.logged, $i18n.locale) }) }}</p>
+          <FileNotes v-if="note" :note="note" :name="selected.name" />
+          <PerformanceReview :entry="entry" />
+          <WorkResults v-if="!selected.tool" :results="entry.works ?? {}" />
+          <AgentsLost :lost="entry.agentsLost ?? 0" />
         </template>
       </div>
     </template>
@@ -137,7 +80,6 @@ function act(change: (code: string) => void): void {
 <style scoped lang="scss">
 @use '@/styles/mixins' as *;
 
-// The `.file` half of the legacy `html, .file` scrollbar rules.
 .file {
   @include containment-scrollbar;
 }
@@ -173,7 +115,12 @@ function act(change: (code: string) => void): void {
   color: var(--dust);
 }
 
-// After the base rules, so it overrides both exactly as the legacy media block did.
+.file-status {
+  margin-top: 16px;
+  color: var(--dust);
+}
+
+// After the base rules, so it overrides both.
 @include desktop {
   .file,
   .file.open {

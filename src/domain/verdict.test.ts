@@ -1,49 +1,40 @@
 import { describe, expect, it } from 'vitest'
-import type { EntryView } from './types'
-import { verdict } from './verdict'
+import type { Entry, Rating } from './types'
+import { levelOf, verdict } from './verdict'
 
-const rated = (u: number, d: number, m: number) => ({ a: { u, d, m } }) as EntryView
+const rated = (rating: Rating): Entry => ({ logged: '2026-11-24', rating })
 
 describe('verdict', () => {
-  it('is null until every axis is rated', () => {
-    expect(verdict(rated(0, 0, 0))).toBeNull()
-    expect(verdict(rated(0, 1, 1))).toBeNull()
-    expect(verdict(rated(3, 0, 1))).toBeNull()
-    expect(verdict(rated(3, 1, 0))).toBeNull()
+  it('is null until all three axes are rated', () => {
+    expect(verdict({ logged: '2026-11-24' })).toBeNull()
+    expect(verdict(rated({ usefulness: 'useful', danger: 'peaceful' }))).toBeNull()
   })
 
-  it('scores the best and worst ratings', () => {
-    expect(verdict(rated(3, 1, 1))).toEqual({
+  it('scores the best and the worst reviews', () => {
+    expect(verdict(rated({ usefulness: 'useful', danger: 'peaceful', management: 'none' }))).toEqual({
       score: 10,
-      call: 'Always pick',
-      why: 'Low drama, high output. Promote it.',
+      tier: 'always',
     })
-    expect(verdict(rated(1, 5, 4))).toEqual({
+    expect(verdict(rated({ usefulness: 'useless', danger: 'extreme', management: 'micromanage' }))).toEqual({
       score: 0,
-      call: 'Never again',
-      why: 'Not worth the agents.',
+      tier: 'never',
     })
   })
 
-  it('rounds to one decimal', () => {
-    // 0.5*0.5 + 0.3*0.75 + 0.2*(2/3) = 0.6083 -> 6.1
-    expect(verdict(rated(2, 2, 2))!.score).toBe(6.1)
+  it('matches the reviews already in the log', () => {
+    expect(verdict(rated({ usefulness: 'useful', danger: 'safeish', management: 'none' }))).toEqual({
+      score: 9.3,
+      tier: 'always',
+    })
+    expect(verdict(rated({ usefulness: 'neutral', danger: 'dangerous', management: 'periodic' }))).toEqual({
+      score: 4.6,
+      tier: 'fair',
+    })
   })
 
-  it('places each tier boundary on the right side', () => {
-    // Each tier's lowest score is reachable exactly; the next score down falls to the tier below.
-    const cases: [number, number, number, number, string][] = [
-      [3, 3, 1, 8.5, 'Always pick'],
-      [3, 1, 4, 8, 'Good pick'],
-      [3, 3, 4, 6.5, 'Good pick'],
-      [3, 4, 3, 6.4, 'Fair trade'],
-      [2, 5, 1, 4.5, 'Fair trade'],
-      [1, 1, 2, 4.3, 'Only if desperate'],
-      [2, 5, 4, 2.5, 'Only if desperate'],
-      [1, 2, 4, 2.2, 'Never again'],
-    ]
-    for (const [u, d, m, score, call] of cases) {
-      expect(verdict(rated(u, d, m)), `${u}${d}${m}`).toMatchObject({ score, call })
-    }
+  it('reads a level as its position on the scale, 0 when missing', () => {
+    const e = rated({ danger: 'dangerous' })
+    expect(levelOf(e, 'danger')).toBe(4)
+    expect(levelOf(e, 'usefulness')).toBe(0)
   })
 })

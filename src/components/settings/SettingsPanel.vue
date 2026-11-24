@@ -1,27 +1,16 @@
 <script setup lang="ts">
-// Shell: details.settings with its summary and .box. Composes SpoilerShieldToggle, BackupTools, EraseLog.
+// details.settings. The spoiler shield is the one setting, and it lasts for the visit.
 import { useContainmentLog } from '@/composables/useContainmentLog'
-import { useLogBrowser } from '@/composables/useLogBrowser'
-import BackupTools from './BackupTools.vue'
-import EraseLog from './EraseLog.vue'
 import SpoilerShieldToggle from './SpoilerShieldToggle.vue'
 
-const log = useContainmentLog()
-const browser = useLogBrowser()
-
-function erase(): void {
-  log.eraseAll()
-  browser.close()
-}
+const { shield } = useContainmentLog()
 </script>
 
 <template>
   <details class="settings">
-    <summary>Settings and backup</summary>
+    <summary>{{ $t('settings.title') }}</summary>
     <div class="box">
-      <SpoilerShieldToggle :model-value="log.state.shield" @update:model-value="log.setShield" />
-      <BackupTools />
-      <EraseLog @erase="erase" />
+      <SpoilerShieldToggle v-model="shield" />
     </div>
   </details>
 </template>

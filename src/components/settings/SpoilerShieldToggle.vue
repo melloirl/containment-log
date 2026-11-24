@@ -3,7 +3,10 @@ const shield = defineModel<boolean>({ required: true })
 </script>
 
 <template>
-  <label class="check"><input v-model="shield" type="checkbox"><span><b>Spoiler shield.</b> Hide the name, silhouette, and risk level of anything you haven't logged yet. You can still find a new arrival by its classification code, or by typing three or more letters of its name.</span></label>
+  <label class="check">
+    <input v-model="shield" type="checkbox">
+    <span><b>{{ $t('settings.shieldName') }}</b> {{ $t('settings.shieldHelp') }}</span>
+  </label>
 </template>
 
 <style scoped lang="scss">

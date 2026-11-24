@@ -8,10 +8,10 @@ defineProps<{
 </script>
 
 <template>
-  <div class="verdict" :class="{ pending: !verdict }" aria-live="polite">
+  <div class="verdict" :class="{ pending: !verdict }">
     <span class="score">{{ verdict ? verdict.score : '–' }}</span>
-    <span class="call">{{ verdict ? verdict.call : 'No verdict yet' }}</span>
-    <span class="why">{{ verdict ? verdict.why : 'Rate all three to get a score out of 10.' }}</span>
+    <span class="call">{{ $t('verdict.' + (verdict?.tier ?? 'pending') + '.call') }}</span>
+    <span class="why">{{ $t('verdict.' + (verdict?.tier ?? 'pending') + '.why') }}</span>
   </div>
 </template>
 

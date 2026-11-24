@@ -11,9 +11,6 @@ const props = defineProps<{
   unlocked: boolean
 }>()
 
-// The legacy attribute text, byte for byte: plain number to string, then '%'.
-// Bound with .attr so Vue writes it with setAttribute instead of re-serialising
-// it through the style object ("--sprite-x: …; --sprite-y: …;").
 const spriteStyle = computed(() => {
   const { x, y } = spriteOffset(props.abnormality.portrait)
   return '--sprite-x:' + x + '%;--sprite-y:' + y + '%'
@@ -36,7 +33,7 @@ watch([() => props.abnormality.code, () => props.unlocked], () => {
     class="portrait"
     :class="[variant === 'unit' ? 'u-portrait' : 'file-portrait', { 'image-loaded': loaded }]"
     aria-hidden="true"
-    :style.attr="spriteStyle"
+    :style="spriteStyle"
   >
     <img
       v-if="unlocked"
@@ -53,7 +50,7 @@ watch([() => props.abnormality.code, () => props.unlocked], () => {
 </template>
 
 <style scoped lang="scss">
-// Rules in legacy source order; equal-specificity pairs rely on it.
+// Order matters: pairs of equal specificity rely on it.
 .portrait {
   display: block;
   aspect-ratio: 1;

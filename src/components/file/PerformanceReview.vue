@@ -1,36 +1,25 @@
 <script setup lang="ts">
-import FanButton from './FanButton.vue'
+import FanBadge from './FanBadge.vue'
 import RatingAxis from './RatingAxis.vue'
 import VerdictCard from './VerdictCard.vue'
 import { AXES } from '@/domain/catalog'
-import { verdict } from '@/domain/verdict'
-import type { AxisKey, EntryView } from '@/domain/types'
+import { levelOf, verdict } from '@/domain/verdict'
+import type { Entry } from '@/domain/types'
 
 defineProps<{
-  entry: EntryView
-}>()
-
-defineEmits<{
-  rate: [axis: AxisKey, level: number]
-  'toggle-fan': []
+  entry: Entry
 }>()
 </script>
 
 <template>
   <section class="sec">
-    <h3>Performance review</h3>
+    <h3>{{ $t('review.title') }}</h3>
     <div class="review">
-      <RatingAxis
-        v-for="x in AXES"
-        :key="x.key"
-        :axis="x"
-        :level="entry.a[x.key]"
-        @rate="$emit('rate', x.key, $event)"
-      />
+      <RatingAxis v-for="x in AXES" :key="x.key" :axis="x" :level="levelOf(entry, x.key)" />
     </div>
     <VerdictCard :verdict="verdict(entry)" />
-    <p class="hint" style="margin-top:8px">Usefulness is half the score. Low danger and low management earn the rest.</p>
-    <FanButton :fan="entry.fan" @toggle="$emit('toggle-fan')" />
+    <p class="hint">{{ $t('review.hint') }}</p>
+    <FanBadge v-if="entry.fan" />
   </section>
 </template>
 
@@ -38,5 +27,9 @@ defineEmits<{
 .review {
   display: grid;
   gap: 14px;
+}
+
+.hint {
+  margin-top: 8px;
 }
 </style>

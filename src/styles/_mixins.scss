@@ -18,11 +18,6 @@ $desktop: 1000px;
   }
 }
 
-// Rectangle with the top-right corner cut off.
-@mixin cut-corner($cut) {
-  clip-path: polygon(0 0, calc(100% - #{$cut}) 0, 100% #{$cut}, 100% 100%, 0 100%);
-}
-
 // Thin amber scrollbar that matches the containment panels.
 @mixin containment-scrollbar {
   scrollbar-width: thin;

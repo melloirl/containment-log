@@ -9,9 +9,9 @@ defineProps<{
 
 <template>
   <ul class="stats">
-    <li><b>{{ logged }} / {{ total }}</b>logged</li>
-    <li><b>{{ lost }}</b>{{ lost === 1 ? 'agent lost' : 'agents lost' }}</li>
-    <li><b>{{ fans }}</b>{{ fans === 1 ? 'fan club joined' : 'fan clubs joined' }}</li>
+    <li><b>{{ logged }} / {{ total }}</b>{{ $t('stats.logged') }}</li>
+    <li><b>{{ lost }}</b>{{ $t('stats.agentsLost', lost) }}</li>
+    <li><b>{{ fans }}</b>{{ $t('stats.fanClubs', fans) }}</li>
   </ul>
 </template>
 

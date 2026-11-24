@@ -1,37 +1,26 @@
 <script setup lang="ts">
 import { WORKS } from '@/domain/catalog'
-import type { EntryView, WorkKey } from '@/domain/types'
+import type { Entry } from '@/domain/types'
 
 defineProps<{
-  results: EntryView['w']
+  results: NonNullable<Entry['works']>
 }>()
-
-defineEmits<{
-  cycle: [work: WorkKey]
-}>()
-
-function label(result: 1 | -1 | undefined): string {
-  return result === 1 ? 'goes well' : result === -1 ? 'avoid' : 'unknown'
-}
 </script>
 
 <template>
   <section class="sec">
-    <h3>Work results</h3>
+    <h3>{{ $t('works.title') }}</h3>
     <div class="works">
-      <button
+      <div
         v-for="w in WORKS"
         :key="w.key"
-        type="button"
         class="work"
-        :class="{ good: results[w.key] === 1, bad: results[w.key] === -1 }"
-        :style.attr="'--w:' + w.color"
-        @click="$emit('cycle', w.key)"
+        :class="results[w.key]"
+        :style="'--w:' + w.color"
       >
-        <b>{{ w.label }}</b><em>{{ label(results[w.key]) }}</em>
-      </button>
+        <b>{{ $t('works.' + w.key) }}</b><em>{{ $t('works.result.' + (results[w.key] ?? 'unknown')) }}</em>
+      </div>
     </div>
-    <p class="hint" style="margin-top:8px">Tap a work type to switch between goes well, avoid, and unknown.</p>
   </section>
 </template>
 
@@ -46,10 +35,8 @@ function label(result: 1 | -1 | undefined): string {
   display: grid;
   gap: 1px;
   padding: 8px 12px;
-  background: transparent;
   border: 1px solid var(--line);
   border-left: 5px solid var(--w);
-  text-align: left;
 }
 
 .work b {
