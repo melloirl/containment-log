@@ -53,6 +53,20 @@
     }
   },
   "O-01-92": {
+    "logged": "2026-11-24",
+    "rating": {
+      "usefulness": "useful",
+      "danger": "neutral",
+      "management": "micromanage"
+    },
+    "works": {
+      "instinct": "good",
+      "insight": "good",
+      "attachment": "good",
+      "repression": "good"
+    }
+  },
+  "F-01-37": {
     "logged": "2026-11-24"
   }
 }
