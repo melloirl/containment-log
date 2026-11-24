@@ -61,10 +61,13 @@ describe('English locale', () => {
 describe('the log', () => {
   const log = createContainmentLog()
 
+  // Checked against the files, not against fixed text: author mode rewrites the
+  // notes, and a test that quotes one fails the deploy when its note is edited.
   it('gives the roster its names and the entries their notes, as written', () => {
-    expect(log.byCode('Bald-Is-Awesome!')?.name).toBe("You're Bald...")
-    expect(log.note('O-03-03')).toContain('panic + a matching resist E.G.O suit')
-    expect(log.note('O-01-92')).toBeUndefined()
+    for (const { code } of CATALOG) {
+      expect(log.byCode(code)?.name, code).toBe(en.abnormalities[code as keyof typeof en.abnormalities])
+      expect(log.note(code), code).toBe((en.notes as Record<string, string>)[code])
+    }
   })
 
   it('totals the logged abnormalities, lowest risk first', () => {
